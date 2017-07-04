@@ -37,6 +37,7 @@ This specification supports the following features in the cartridge:
 * 2 MiB SRAM size (100 banks)
 * Real-time clock, accurate to 1 second, with a 5 year capacity
 * Rumble, with up to 3 different speeds
+* 802.11 with hardware TCP/IP stack, up to 4 simultaneous connections.
 
 ## Address blocks
 
@@ -44,7 +45,7 @@ This mapper uses the address blocks assigned to the cartridge for its own functi
 
 * **0000-3FFF:** ROM home bank block. ROM bank 0 is always mapped to this area, and it cannot be changed. Writing to this area writes to the mapper registers.
 * **4000-7FFF:** ROM banking block. Any ROM bank can be mapped to this area, as selected by the MR0 and MR1 registers, as it will be explained later in this document. Writes to this area pass through to the ROM itself (the full address being partially specified by the MR0 and MR1 registers as well as the actual address accessed) — this is normally a dummy write with no effect, but it can be used for controlling hardware such as flash cartridges.
-* **A000-BFFF:** RAM block. This area is conventionally used for in-cartridge non-volatile RAM (that is, SRAM) accessing. This mapper allows mapping any bank of SRAM to that area, as well as read-only copies of its internal registers, or RTC data.
+* **A000-BFFF:** RAM block. This area is conventionally used for in-cartridge (optionally non-volatile) RAM (that is, SRAM) accessing. This mapper allows mapping any bank of SRAM to that area, as well as read-only copies of its internal registers, or RTC data.
 
 ## Mapper registers
 
@@ -83,6 +84,11 @@ The following values can be written to MR3. Writing a value not in this list can
     * **02:** map SRAM banks, read-only
     * **03:** map SRAM banks, read/write
     * **05:** map RTC latched registers
+    * **07:** map 802.11 control registers
+    * **08:** map TCP connection 0 buffers
+    * **09:** map TCP connection 1 buffers
+    * **0A:** map TCP connection 2 buffers
+    * **0B:** map TCP connection 3 buffers
 * RTC control:
     * **10:** latch RTC registers
     * **11:** set RTC (copy latched registers to real registers)
@@ -132,6 +138,8 @@ These values determine exactly what is mapped to the A000-BFFF area. The cartrid
 * **02:** a bank of SRAM is mapped to the A000-BFFF area, in read-only mode. Writes are silently discarded while in this mode. (The bank that is mapped is selected by the MR2 register.)
 * **03:** a bank of SRAM is mapped to the A000-BFFF area, in read/write mode. SRAM can be both read and written to in this mode. (The bank that is mapped is selected by the MR2 register.) Note that this value is equivalent in functionality to the SRAM enable value in MBC1-5 mappers.
 * **05:** the RTC latch registers are mapped to the A000-BFFF area, in read/write mode. (Note that the RTC latch registers contain garbage on power-up, and are only read from the actual RTC registers when 10 is written to MR3.) Just like the control registers, the RTC registers are mirrored every four bytes across the entire addressing block; in ascending order of addresses, the RTC latch registers are mapped in this order: RTCW, RTCDH, RTCM, RTCS. (The RTC will be explained in detail in a later section of this document.)
+* **07:** the control registers of the 802.11 implementation are mapped to the A000-BFFF area, in read/write mode. The 802.11 will be explained in detail in a later section of this document.
+* **08 - 0B:** the buffers of the TCP connection 0, 1, 2 or 3, respectively, are mapped to the A000-BFFF area. 
 
 ### RTC control
 
